@@ -1,4 +1,6 @@
+import 'package:dove/pages/authpage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 class Homepage extends StatelessWidget {
   const Homepage({super.key});
@@ -8,13 +10,40 @@ class Homepage extends StatelessWidget {
     double dimNum = 0.0;
     bool showContacts = false;
     bool showNewSafezone = false;
+
     ValueNotifier<bool> newSelection = ValueNotifier(false);
     List<double> selectedLocation = List.empty(growable: true);
     TextEditingController newSafeZoneName = TextEditingController();
+    MapController mapController1 = MapController(
+      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+      areaLimit: const BoundingBox(
+        east: 10.4922941,
+        north: 47.8084648,
+        south: 45.817995,
+        west: 5.9559113,
+      ),
+    );
+    MapController mapController2 = MapController(
+      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+      areaLimit: const BoundingBox(
+        east: 10.4922941,
+        north: 47.8084648,
+        south: 45.817995,
+        west: 5.9559113,
+      ),
+    );
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.logo_dev),
         title: Text("Welcome username"),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              (MaterialPageRoute(builder: (context) => const Authpage())),
+            ),
+            icon: Icon(Icons.person),
+          ),
+        ],
       ),
       drawer: Drawer(),
       body: SingleChildScrollView(
@@ -40,48 +69,22 @@ class Homepage extends StatelessWidget {
               child: SizedBox(
                 height: MediaQuery.of(context).size.height / 2,
                 width: MediaQuery.of(context).size.width - 10,
-                child: Text("Live location data"),
+                child: OSMFlutter(
+                  controller: mapController1,
+                  osmOption: OSMOption(
+                    showZoomController: true,
+                    isPicker: true,
+                    zoomOption: ZoomOption(initZoom: 16),
+                  ),
+                  onGeoPointClicked: (point) {
+                    selectedLocation = [point.latitude, point.longitude];
+                    newSelection.value = !newSelection.value;
+                    print(point.latitude);
+                  },
+                ),
               ),
             ),
-            Card(
-              child: StatefulBuilder(
-                builder: (context, state1) {
-                  return Column(
-                    children: [
-                      ListTile(
-                        title: Text("contacts "),
-                        trailing: Icon(Icons.keyboard_arrow_down_sharp),
-                        onTap: () {
-                          state1(() {
-                            showContacts = !showContacts;
-                          });
-                        },
-                      ),
-                      Visibility(
-                        visible: showContacts,
-                        child: FutureBuilder(
-                          future: Future.delayed(Duration(seconds: 1)),
-                          builder: (context, asyncSnapshot) {
-                            if (asyncSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return CircularProgressIndicator();
-                            }
 
-                            return ListView.builder(
-                              itemCount: 1,
-                              shrinkWrap: true,
-                              itemBuilder: (BuildContext context, int index) {
-                                return ListTile();
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
             Card(
               child: StatefulBuilder(
                 builder: (context, state2) {
@@ -133,7 +136,7 @@ class Homepage extends StatelessWidget {
                               child: TextField(
                                 controller: newSafeZoneName,
                                 decoration: InputDecoration(
-                                  labelText: "Email",
+                                  labelText: "name",
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
                                     borderSide: const BorderSide(
@@ -144,7 +147,6 @@ class Homepage extends StatelessWidget {
                                 ),
                               ),
                             ),
-
                             Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
@@ -155,6 +157,7 @@ class Homepage extends StatelessWidget {
                               height: 40,
                               child: Text("Save"),
                             ),
+                            const SizedBox(height: 20),
                           ],
                         ),
                       ),
@@ -164,8 +167,47 @@ class Homepage extends StatelessWidget {
               ),
             ),
             Card(
+              child: StatefulBuilder(
+                builder: (context, state1) {
+                  return Column(
+                    children: [
+                      ListTile(
+                        title: Text("contacts "),
+                        trailing: Icon(Icons.keyboard_arrow_down_sharp),
+                        onTap: () {
+                          state1(() {
+                            showContacts = !showContacts;
+                          });
+                        },
+                      ),
+                      Visibility(
+                        visible: showContacts,
+                        child: FutureBuilder(
+                          future: Future.delayed(Duration(seconds: 1)),
+                          builder: (context, asyncSnapshot) {
+                            if (asyncSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            }
+
+                            return ListView.builder(
+                              itemCount: 1,
+                              shrinkWrap: true,
+                              itemBuilder: (BuildContext context, int index) {
+                                return ListTile();
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Card(
               child: SizedBox(
-                height: MediaQuery.of(context).size.height / 2,
+                height: 50,
                 width: MediaQuery.of(context).size.width - 20,
                 child: Center(child: Text("Button Offline")),
               ),
